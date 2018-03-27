@@ -46,6 +46,7 @@
 #include "types.h"
 #include "vmm.h"
 #include "vmmapi.h"
+#include "sw_load.h"
 #include "cpuset.h"
 #include "dm.h"
 #include "acpi.h"
@@ -61,7 +62,6 @@
 #include "smbiostbl.h"
 #include "rtc.h"
 #include "version.h"
-#include "sw_load.h"
 
 #define GUEST_NIO_PORT		0x488	/* guest upcalls via i/o port */
 
@@ -72,6 +72,7 @@ char *vmname;
 
 int guest_ncpus;
 char *guest_uuid_str;
+char *vsbl_file_name;
 bool stdio_in_use;
 
 static int guest_vmexit_on_hlt, guest_vmexit_on_pause;
@@ -150,6 +151,7 @@ usage(int code)
 		"       -k: kernel image path\n"
 		"       -r: ramdisk image path\n"
 		"       -B: bootargs for kernel\n"
+		"       -G: GVT args: low_gm_size, high_gm_size, fence_sz\n"
 		"       -v: version\n",
 		progname, (int)strlen(progname), "");
 
@@ -545,6 +547,10 @@ sig_handler_term(int signo)
 	mevent_notify();
 }
 
+enum {
+	CMD_OPT_VSBL = 1000,
+};
+
 static struct option long_options[] = {
 	{"no_x2apic_mode",	no_argument,		0, 'a' },
 	{"acpi",		no_argument,		0, 'A' },
@@ -573,6 +579,9 @@ static struct option long_options[] = {
 	{"version",		no_argument,		0, 'v' },
 	{"gvtargs",		required_argument,	0, 'G' },
 	{"help",		no_argument,		0, 'h' },
+
+	/* Following cmd option only has long option */
+	{"vsbl",		required_argument,	0, CMD_OPT_VSBL},
 	{0,			0,			0,  0  },
 };
 
@@ -706,6 +715,18 @@ main(int argc, char *argv[])
 			break;
 		case 'v':
 			print_version();
+			break;
+		case 'G':
+			if (acrn_parse_gvtargs(optarg) != 0) {
+				errx(EX_USAGE, "invalid GVT param %s", optarg);
+				exit(1);
+			}
+			break;
+		case CMD_OPT_VSBL:
+			if (acrn_parse_vsbl(optarg) != 0) {
+				errx(EX_USAGE, "invalid vsbl param %s", optarg);
+				exit(1);
+			}
 			break;
 		case 'h':
 			usage(0);
