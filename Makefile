@@ -79,12 +79,14 @@ SRCS += hw/pci/virtio/virtio_rnd.c
 SRCS += hw/pci/virtio/virtio_hyper_dmabuf.c
 SRCS += hw/pci/irq.c
 SRCS += hw/pci/uart.c
+SRCS += hw/pci/gvt.c
 SRCS += hw/acpi/acpi.c
 
 # core
 #SRCS += core/bootrom.c
-SRCS += core/sw_load_common.c
-SRCS += core/sw_load_bzimage.c
+SRCS += core/sw_load.c
+SRCS += core/sw_load_direct.c
+SRCS += core/sw_load_vsbl.c
 SRCS += core/smbiostbl.c
 SRCS += core/mevent.c
 SRCS += core/gc.c
